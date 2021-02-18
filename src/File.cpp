@@ -22,12 +22,8 @@
 #include "MyLogger/Logger.hpp"
 #include <fstream>
 
-//------------------------------------------------------------------
-//! \param filename the file path to read.
-//! \param the buffer receiving the content of the file.
-//! \return true if success, else false.
-//------------------------------------------------------------------
-bool File::readAllFile(std::string const& filename, std::string& buffer)
+//-----------------------------------------------------------------------------
+bool File::readWholeFile(std::string const& filename, std::string& buffer)
 {
     std::ifstream infile;
     bool res = false;

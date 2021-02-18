@@ -24,26 +24,28 @@
 #  include <list>
 #  include <string>
 #  include <vector>
+#  include <fstream>
 
 // *****************************************************************************
 //! \brief Class manipulating a set of paths for searching files in the same
-//! idea of the Unix environment variable $PATH.
+//! idea of the Unix environment variable $PATH. Paths are separated by ':' and
+//! search is made left to right. Ie. "/foo/bar:/usr/lib/"
 // *****************************************************************************
 class Path
 {
 public:
 
     //--------------------------------------------------------------------------
-    //! \brief Empty constructor.
+    //! \brief Empty constructor. No path is defined.
     //--------------------------------------------------------------------------
     Path() = default;
 
     //--------------------------------------------------------------------------
-    //! \brief Constructor. init with a given path. Directories are separated
-    //! by ':'.
-    //! Example: "/foo/bar:/usr/lib/".
+    //! \brief Constructor with a given path. Directories shall be separated
+    //! by the character given by the param delimiter.
+    //! Example: Path("/foo/bar:/usr/lib/", ':').
     //--------------------------------------------------------------------------
-    Path(std::string const& path);
+    Path(std::string const& path, char const delimiter = ':');
 
     //--------------------------------------------------------------------------
     //! \brief Destructor.
@@ -51,14 +53,14 @@ public:
     ~Path() = default;
 
     //--------------------------------------------------------------------------
-    //! \brief Append a new path. Directories are separated by ':'.
-    //! Example: "/foo/bar:/usr/lib/".
+    //! \brief Append a new path. Directories are separated by the delimiter char
+    //! (by default ':'). Example: add("/foo/bar:/usr/lib/").
     //--------------------------------------------------------------------------
     void add(std::string const& path);
 
     //--------------------------------------------------------------------------
-    //! \brief Reset the path state. Directories are separated by ':'.
-    //! Example: "/foo/bar:/usr/lib/".
+    //! \brief Replace the path state by a new one. Directories are separated by
+    //! the delimiter char (by default ':'). Example: reset("/foo/bar:/usr/lib/").
     //--------------------------------------------------------------------------
     void reset(std::string const& path);
 
@@ -68,38 +70,9 @@ public:
     void clear();
 
     //--------------------------------------------------------------------------
-    //! \brief Erase the given directory from the path.
+    //! \brief Erase the given directory from the path if found.
     //--------------------------------------------------------------------------
     void remove(std::string const& path);
-
-    //--------------------------------------------------------------------------
-    //! \brief Save temporary the path of currently loading MyLoggerMap
-    //! file. The goal of the stack is to avoid to MyLogger to have path
-    //! conflict with two loaded MyLoggerMap files.
-    //--------------------------------------------------------------------------
-    void push(std::string const& path)
-    {
-        m_stack_path.push_back(path);
-    }
-
-    //--------------------------------------------------------------------------
-    //! \brief once loaded the path is no longer needed.
-    //--------------------------------------------------------------------------
-    void pop()
-    {
-        if (!m_stack_path.empty())
-        {
-            m_stack_path.pop_back();
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    //! \brief Get the top of the stack.
-    //--------------------------------------------------------------------------
-    std::string top() const
-    {
-        return m_stack_path.back();
-    }
 
     //--------------------------------------------------------------------------
     //! \brief Find if a file exists in the search path. Note that you have to
@@ -108,23 +81,38 @@ public:
     //! suppress since this method have bee called.
     //!
     //! \return the full path (if found) and the existence of this path.
+    //!
     //--------------------------------------------------------------------------
     std::pair<std::string, bool> find(std::string const& filename) const;
 
     //--------------------------------------------------------------------------
     //! \brief Return the full path for the file (if found) else return itself.
+    //! Beware of race condition: even if found the file may have suppress after
+    //! this function has been called.
     //--------------------------------------------------------------------------
     std::string expand(std::string const& filename) const;
 
     //--------------------------------------------------------------------------
-    //! \brief Return the path as string.
+    //! \brief Return the path as string. The first path is always ".:"
     //--------------------------------------------------------------------------
-    std::string const& toString() const;
+    std::string const& toString();
 
+    bool open(std::string& filename, std::ifstream& ifs,
+              std::ios_base::openmode mode = std::ios_base::in) const;
+    bool open(std::string& filename, std::ofstream& ifs,
+              std::ios_base::openmode mode = std::ios_base::out) const;
+    bool open(std::string& filename, std::fstream& ifs,
+              std::ios_base::openmode mode = std::ios_base::in | std::ios_base::out) const;
 protected:
 
+    //--------------------------------------------------------------------------
+    //! \brief From m_search_paths rebuild m_string_path
+    //--------------------------------------------------------------------------
     void update();
 
+    //--------------------------------------------------------------------------
+    //! \brief Slipt paths separated by delimiter char into std::list
+    //--------------------------------------------------------------------------
     void split(std::string const& path);
 
 protected:
@@ -136,12 +124,8 @@ protected:
     //! \brief the list of pathes converted as a string. Pathes are separated by
     //! the m_delimiter char.
     std::string m_string_path;
-    //! \brief Stack of temporary pathes. A temporary path is pushed when
-    //! loading a MyLogger file: this allows to traverse its resources (a
-    //! MyLogger file is a zip file containing directories and files). A stack
-    //! is usefull when loading a MyLogger file that loads another MyLogger
-    //! file.)
-    std::vector<std::string> m_stack_path;
+    //! \brief redo update() when dirty
+    bool m_dirty = false;
 };
 
-#endif
+#endif // MYLOGGER_PATH_HPP

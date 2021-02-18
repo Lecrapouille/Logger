@@ -42,13 +42,13 @@
 #  endif
 
 // **************************************************************
-//! \brief Utility of file name manipulation
+//! \brief File name manipulation routines (static methods).
 // **************************************************************
 class File
 {
 public:
 
-    enum FileType { DoesNotExist, Directory, Document, UnknownType };
+    enum Type { DoesNotExist, Directory, Document, UnknownType };
 
     //--------------------------------------------------------------------------
     //! \brief Check if a file exits. It gives just an information.
@@ -67,7 +67,7 @@ public:
     //--------------------------------------------------------------------------
     //! \brief Return the type of file.
     //--------------------------------------------------------------------------
-    inline static FileType type(std::string const& path)
+    inline static Type type(std::string const& path)
     {
         struct stat buffer;
         if (0 == stat(path.c_str(), &buffer))
@@ -103,8 +103,11 @@ public:
 
     //--------------------------------------------------------------------------
     //! \brief Read the whole file and store its content as string.
+    //! \param filename the file path to read.
+    //! \param the buffer receiving the content of the file.
+    //! \return true if success, else false.
     //--------------------------------------------------------------------------
-    static bool readAllFile(std::string const& filename, std::string& buffer);
+    static bool readWholeFile(std::string const& filename, std::string& buffer);
 
     //--------------------------------------------------------------------------
     //! \brief give the file name with its extension from a given path

@@ -25,24 +25,6 @@
 namespace tool { namespace log {
 
 //------------------------------------------------------------------------------
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-static const char *c_str_severity[Severity::MaxLoggerSeverity + 1] =
-{
-    [Severity::None]      = "",
-    [Severity::Info]      = "[INFO]",
-    [Severity::Debug]     = "[DEBUG]",
-    [Severity::Warning]   = "[WARNING]",
-    [Severity::Failed]    = "[FAILURE]",
-    [Severity::Error]     = "[ERROR]",
-    [Severity::Signal]    = "[SIGNAL]",
-    [Severity::Exception] = "[THROW]",
-    [Severity::Catch]     = "[CATCH]",
-    [Severity::Fatal]     = "[FATAL]"
-};
-#pragma GCC diagnostic pop
-
-//------------------------------------------------------------------------------
 Logger::Logger(project::Info const& info)
     : m_info(info)
 {
@@ -126,14 +108,8 @@ void Logger::close()
 }
 
 //------------------------------------------------------------------------------
-void Logger::write(const char *message, const int /*length*/)
+void Logger::write(const char *message)
 {
-    if (nullptr != m_stream)
-    {
-        (*m_stream) << message;
-        m_stream->flush();
-    }
-
     if (!m_file)
         return ;
 
@@ -142,27 +118,64 @@ void Logger::write(const char *message, const int /*length*/)
 }
 
 //------------------------------------------------------------------------------
-void Logger::beginOfLine()
+const char* Logger::severityToStr(const Severity& s)
 {
-    currentTime();
-    write(m_buffer_time);
-    write(c_str_severity[m_severity]);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+    static const char *c_severities[] =
+    {
+        [Severity::None]      = "",
+        [Severity::Info]      = "[INFO]",
+        [Severity::Debug]     = "[DEBUG]",
+        [Severity::Warning]   = "[WARNING]",
+        [Severity::Failed]    = "[FAILURE]",
+        [Severity::Error]     = "[ERROR]",
+        [Severity::Signal]    = "[SIGNAL]",
+        [Severity::Exception] = "[THROW]",
+        [Severity::Catch]     = "[CATCH]",
+        [Severity::Fatal]     = "[FATAL]"
+    };
+#pragma GCC diagnostic pop
+    return c_severities[s];
+}
+
+//------------------------------------------------------------------------------
+const char* Logger::currentDate()
+{
+    return timeAndDateFormat("[%Y/%m/%d]");
+}
+
+//------------------------------------------------------------------------------
+const char* Logger::currentTime()
+{
+    return timeAndDateFormat("[%H:%M:%S]");
+}
+
+//------------------------------------------------------------------------------
+const char* Logger::funclineFormat()
+{
+    return "[%s::%d] ";
+}
+
+//------------------------------------------------------------------------------
+const char* Logger::endOfLine()
+{
+    return "\n";
 }
 
 //------------------------------------------------------------------------------
 void Logger::header()
 {
-    currentDate();
     log("======================================================\n"
         "  %s %s %u.%u - Event log - %s\n"
         "  git branch: %s\n"
         "  git SHA1: %s\n"
-        "======================================================\n\n",
+        "======================================================\n\n\n",
         m_info.project_name.c_str(),
         m_info.debug ? "Debug" : "Release",
         m_info.major_version,
         m_info.minor_version,
-        m_buffer_time,
+        currentDate(),
         m_info.git_branch.c_str(),
         m_info.git_sha1.c_str());
 }
@@ -170,26 +183,11 @@ void Logger::header()
 //------------------------------------------------------------------------------
 void Logger::footer()
 {
-    currentTime();
     log("\n======================================================\n"
         "  %s log closed at %s\n"
-        "======================================================\n\n",
+        "======================================================\n",
         m_info.project_name.c_str(),
-        m_buffer_time);
-}
-
-//------------------------------------------------------------------------------
-ILogger& Logger::operator<<(const Severity& severity)
-{
-    write(c_str_severity[severity]);
-    return *this;
-}
-
-//------------------------------------------------------------------------------
-ILogger& Logger::operator<<(const char *msg)
-{
-    write(msg);
-    return *this;
+        currentTime());
 }
 
 } } // namespace tool::log

@@ -31,74 +31,74 @@ using ::testing::HasSubstr;
 //--------------------------------------------------------------------------
 TEST(PathTests, EmptyConstructor)
 {
-  Path path;
+    Path path;
 
-  ASSERT_EQ(0u, path.m_search_paths.size());
-  ASSERT_EQ(':', path.m_delimiter);
-  ASSERT_EQ(true, path.m_string_path == "");
+    ASSERT_EQ(0u, path.m_search_paths.size());
+    ASSERT_EQ(':', path.m_delimiter);
+    ASSERT_EQ(true, path.m_string_path == "");
 }
 
 //--------------------------------------------------------------------------
 TEST(PathTests, SplitConstructor)
 {
-  Path path("/a/b:c/d");
+    Path path("/a/b:c/d");
 
-  ASSERT_EQ(2, path.m_search_paths.size());
-  ASSERT_STREQ(path.toString().c_str(), ".:/a/b:c/d:");
-  path.clear();
-  ASSERT_EQ(0, path.m_search_paths.size());
-  ASSERT_STREQ(path.toString().c_str(), "");
-  path.add("g/g");
-  ASSERT_EQ(1, path.m_search_paths.size());
-  ASSERT_STREQ(path.toString().c_str(), ".:g/g:");
-  path.reset("a/b");
-  ASSERT_EQ(1, path.m_search_paths.size());
-  ASSERT_STREQ(path.toString().c_str(), ".:a/b:");
-  std::cout << path.toString() << std::endl;
+    ASSERT_EQ(2, path.m_search_paths.size());
+    ASSERT_STREQ(path.toString().c_str(), ".:/a/b:c/d:");
+    path.clear();
+    ASSERT_EQ(0, path.m_search_paths.size());
+    ASSERT_STREQ(path.toString().c_str(), "");
+    path.add("g/g");
+    ASSERT_EQ(1, path.m_search_paths.size());
+    ASSERT_STREQ(path.toString().c_str(), ".:g/g:");
+    path.reset("a/b");
+    ASSERT_EQ(1, path.m_search_paths.size());
+    ASSERT_STREQ(path.toString().c_str(), ".:a/b:");
+    std::cout << path.toString() << std::endl;
 }
 
 //--------------------------------------------------------------------------
 TEST(PathTests, SplitDir)
 {
-  Path path;
-  path.split("/a//b\\d/:e\\d:");
-  ASSERT_STREQ(path.toString().c_str(), ".:/a//b\\d:e\\d:");
-  ASSERT_EQ(2, path.m_search_paths.size());
-  path.remove("incorrect/path");
-  ASSERT_EQ(2, path.m_search_paths.size());
-  path.remove("/a//b\\d");
-  ASSERT_EQ(2, path.m_search_paths.size()); // FIXME should be1
-  path.remove("/a//b\\d/");
-  ASSERT_EQ(1, path.m_search_paths.size());
-  ASSERT_STREQ(path.toString().c_str(), ".:e\\d:");
-  path.remove("e\\d/");
-  ASSERT_EQ(0, path.m_search_paths.size());
-  path.remove("");
-  ASSERT_EQ(0, path.m_search_paths.size());
-  path.remove("incorrect/path");
-  ASSERT_EQ(0, path.m_search_paths.size());
-  path.add("g/g");
-  ASSERT_EQ(1, path.m_search_paths.size());
-  ASSERT_STREQ(path.toString().c_str(), ".:g/g:");
+    Path path;
+    path.split("/a//b\\d/:e\\d:");
+    ASSERT_STREQ(path.toString().c_str(), ".:/a//b\\d:e\\d:");
+    ASSERT_EQ(2, path.m_search_paths.size());
+    path.remove("incorrect/path");
+    ASSERT_EQ(2, path.m_search_paths.size());
+    path.remove("/a//b\\d");
+    ASSERT_EQ(2, path.m_search_paths.size()); // FIXME should be1
+    path.remove("/a//b\\d/");
+    ASSERT_EQ(1, path.m_search_paths.size());
+    ASSERT_STREQ(path.toString().c_str(), ".:e\\d:");
+    path.remove("e\\d/");
+    ASSERT_EQ(0, path.m_search_paths.size());
+    path.remove("");
+    ASSERT_EQ(0, path.m_search_paths.size());
+    path.remove("incorrect/path");
+    ASSERT_EQ(0, path.m_search_paths.size());
+    path.add("g/g");
+    ASSERT_EQ(1, path.m_search_paths.size());
+    ASSERT_STREQ(path.toString().c_str(), ".:g/g:");
 }
 
 //--------------------------------------------------------------------------
 TEST(PathTests, FindAndExpand)
 {
-  Path path("/bin:/usr/bin:/usr/local/bin");
-  EXPECT_THAT(path.expand("ls").c_str(), HasSubstr("/bin/ls"));
-  auto res1 = path.find("ls");
+    Path path("/bin:/usr/bin:/usr/local/bin");
+    EXPECT_THAT(path.expand("ls").c_str(), HasSubstr("/bin/ls"));
+    auto res1 = path.find("ls");
 
-  ASSERT_EQ(true, res1.second);
-  EXPECT_THAT(res1.first.c_str(), HasSubstr("/bin/ls"));
+    ASSERT_EQ(true, res1.second);
+    EXPECT_THAT(res1.first.c_str(), HasSubstr("/bin/ls"));
 
-  auto res3 = path.find(res1.first);
-  ASSERT_EQ(true, res3.second);
-  ASSERT_STREQ(res3.first.c_str(), res1.first.c_str());
+    auto res3 = path.find(res1.first);
+    ASSERT_EQ(true, res3.second);
+    ASSERT_STREQ(res3.first.c_str(), res1.first.c_str());
 
-  path.clear();
-  ASSERT_EQ(true, path.expand("ls") == "ls");
-  auto res2 = path.find("ls");
-  ASSERT_EQ(false, res2.second);
-  ASSERT_STREQ(res2.first.c_str(), "");
+    path.clear();
+    ASSERT_EQ(true, path.expand("ls") == "ls");
+    auto res2 = path.find("ls");
+    ASSERT_EQ(false, res2.second);
+    ASSERT_STREQ(res2.first.c_str(), "");
 }

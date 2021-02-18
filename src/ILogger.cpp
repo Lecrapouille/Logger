@@ -24,66 +24,82 @@
 namespace tool { namespace log {
 
 //------------------------------------------------------------------------------
-const char *ILogger::strtime()
+ILogger::ILogger(size_t const buffer_size)
 {
-    currentTime();
-    return m_buffer_time;
+    m_buffer.resize(std::max(size_t(128), buffer_size));
 }
 
 //------------------------------------------------------------------------------
-void ILogger::currentDate()
+const char* ILogger::timeAndDateFormat(const char* format)
 {
-    time_t current_time = time(nullptr);
+    static char buffer[32];
 
-    strftime(m_buffer_time, sizeof (m_buffer_time), "[%Y/%m/%d]", localtime(&current_time));
+    time_t current_time = ::time(nullptr);
+    strftime(buffer, sizeof (buffer), format, localtime(&current_time));
+    return buffer;
 }
 
 //------------------------------------------------------------------------------
-void ILogger::currentTime()
+ILogger& ILogger::time()
 {
-    time_t current_time = time(nullptr);
+    write(currentTime());
 
-    strftime(m_buffer_time, sizeof (m_buffer_time), "[%H:%M:%S]", localtime(&current_time));
+    return *this;
 }
 
 //------------------------------------------------------------------------------
-void ILogger::log(std::ostream *stream, enum Severity severity, const char* format, ...)
+ILogger& ILogger::severity(Severity const sev)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
+    write(severityToStr(sev));
 
-    int n;
+    return *this;
+}
+
+//------------------------------------------------------------------------------
+ILogger& ILogger::funcline(const char *function, int line)
+{
+    return log(funclineFormat(), function, line);
+}
+
+//------------------------------------------------------------------------------
+ILogger& ILogger::eol()
+{
+    write(endOfLine());
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------
+ILogger& ILogger::log(std::initializer_list<tool::log::Value> const& list, const char* del)
+{
+    std::ostringstream stream;
+    for (auto& it: list)
+        stream << it << del;
+
+    stream.seekp(-int(strlen(del)), std::ios_base::end);
+    write(stream.str());
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------
+ILogger& ILogger::log(const char* format, ...)
+{
     va_list params;
-
-    m_severity = severity;
-    m_stream = stream;
-    beginOfLine();
     va_start(params, format);
-    n = vsnprintf(m_buffer, c_buffer_size - 2u, format, params);
+    int bytes = vsnprintf(m_buffer.data(), m_buffer.size(), format, params);
     va_end(params);
 
-    // Add a '\n' if missing
-    if ('\n' != m_buffer[n - 1])
+    // Remove '\n'
+    size_t n = static_cast<size_t>(bytes);
+    if ((bytes > 0) && (m_buffer[n - 1u] == '\n'))
     {
-        m_buffer[n] = '\n';
-        m_buffer[n + 1] = '\0';
+        m_buffer[n - 1u] = '\0';
     }
 
-    write(m_buffer);
+    write(m_buffer.data());
 
-    m_stream = nullptr;
-}
-
-//------------------------------------------------------------------------------
-void ILogger::log(const char* format, ...)
-{
-    std::lock_guard<std::mutex> lock(m_mutex);
-
-    va_list params;
-
-    va_start(params, format);
-    vsnprintf(m_buffer, c_buffer_size, format, params);
-    va_end(params);
-    write(m_buffer);
+    return *this;
 }
 
 } } // namespace tool::log

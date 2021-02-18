@@ -24,74 +24,74 @@
 //--------------------------------------------------------------------------
 TEST(FileTests, PathManipulation)
 {
-  std::string res;
+    std::string res;
 
-  res = File::fileName("/home/qq/MyLogger/tests/common/FileTests.cpp");
-  ASSERT_STREQ(res.c_str(), "FileTests.cpp");
+    res = File::fileName("/home/qq/MyLogger/tests/common/FileTests.cpp");
+    ASSERT_STREQ(res.c_str(), "FileTests.cpp");
 
-  res = File::fileName("/home/qq/MyLogger/tests/common");
-  ASSERT_STREQ(res.c_str(), "common");
+    res = File::fileName("/home/qq/MyLogger/tests/common");
+    ASSERT_STREQ(res.c_str(), "common");
 
-  res = File::fileName("common");
-  ASSERT_STREQ(res.c_str(), "common");
+    res = File::fileName("common");
+    ASSERT_STREQ(res.c_str(), "common");
 
-  res = File::baseName("/home/qq/MyLogger/tests/common/FileTests.cpp");
-  ASSERT_STREQ(res.c_str(), "FileTests");
+    res = File::baseName("/home/qq/MyLogger/tests/common/FileTests.cpp");
+    ASSERT_STREQ(res.c_str(), "FileTests");
 
-  res = File::baseName("/home/qq/MyLogger/tests/common");
-  ASSERT_STREQ(res.c_str(), "common");
+    res = File::baseName("/home/qq/MyLogger/tests/common");
+    ASSERT_STREQ(res.c_str(), "common");
 
-  res = File::baseName("common");
-  ASSERT_STREQ(res.c_str(), "common");
+    res = File::baseName("common");
+    ASSERT_STREQ(res.c_str(), "common");
 
-  res = File::extension("/home/qq/MyLogger/tests/common/FileTests.cpp");
-  ASSERT_STREQ(res.c_str(), "cpp");
+    res = File::extension("/home/qq/MyLogger/tests/common/FileTests.cpp");
+    ASSERT_STREQ(res.c_str(), "cpp");
 
-  res = File::extension("/home/qq/MyLogger/tests/common/FileTests.cpp~");
-  ASSERT_STREQ(res.c_str(), "cpp");
+    res = File::extension("/home/qq/MyLogger/tests/common/FileTests.cpp~");
+    ASSERT_STREQ(res.c_str(), "cpp");
 
-  res = File::extension("/home/qq/MyLogger/tests/common/FileTests.cpp.hpp");
-  ASSERT_STREQ(res.c_str(), "hpp");
+    res = File::extension("/home/qq/MyLogger/tests/common/FileTests.cpp.hpp");
+    ASSERT_STREQ(res.c_str(), "hpp");
 
-  res = File::extension("/home/qq/MyLogger/tests/common");
-  ASSERT_STREQ(res.c_str(), "");
+    res = File::extension("/home/qq/MyLogger/tests/common");
+    ASSERT_STREQ(res.c_str(), "");
 
-  res = File::extension("common");
-  ASSERT_STREQ(res.c_str(), "");
-  ASSERT_EQ(false, File::exist("pouet"));
-  ASSERT_EQ(true, File::exist("/dev/null"));
+    res = File::extension("common");
+    ASSERT_STREQ(res.c_str(), "");
+    ASSERT_EQ(false, File::exist("pouet"));
+    ASSERT_EQ(true, File::exist("/dev/null"));
 
-  ASSERT_EQ(true, File::Directory == File::type("/tmp"));
-  ASSERT_EQ(true, File::isReadable("/tmp"));
-  ASSERT_EQ(true, File::isWritable("/tmp"));
+    ASSERT_EQ(true, File::Directory == File::type("/tmp"));
+    ASSERT_EQ(true, File::isReadable("/tmp"));
+    ASSERT_EQ(true, File::isWritable("/tmp"));
 
-  if (File::exist("/usr/sbin/")) // FIXME: does not exist on Travis-CI docker
+    if (File::exist("/usr/sbin/")) // FIXME: does not exist on Travis-CI docker
     {
-      ASSERT_EQ(true, File::Directory == File::type("/usr/sbin/"));
-      ASSERT_EQ(true, File::isReadable("/usr/sbin/"));
-      //FIXME ASSERT_EQ(true, false == File::isWritable("/usr/sbin/"));
+        ASSERT_EQ(true, File::Directory == File::type("/usr/sbin/"));
+        ASSERT_EQ(true, File::isReadable("/usr/sbin/"));
+        //FIXME ASSERT_EQ(true, false == File::isWritable("/usr/sbin/"));
     }
-  ASSERT_EQ(true, File::DoesNotExist == File::type("/usr/sbin/foobar"));
-  ASSERT_EQ(false, File::isReadable("/usr/sbin/foobar"));
-  ASSERT_EQ(false, File::isWritable("/usr/sbin/foobar"));
+    ASSERT_EQ(true, File::DoesNotExist == File::type("/usr/sbin/foobar"));
+    ASSERT_EQ(false, File::isReadable("/usr/sbin/foobar"));
+    ASSERT_EQ(false, File::isWritable("/usr/sbin/foobar"));
 
-  ASSERT_EQ(true, File::Document == File::type("/bin/ls"));
-  ASSERT_EQ(true, File::isReadable("/bin/ls"));
-  //FIXME ASSERT_EQ(true, false == File::isWritable("/bin/ls"));
+    ASSERT_EQ(true, File::Document == File::type("/bin/ls"));
+    ASSERT_EQ(true, File::isReadable("/bin/ls"));
+    //FIXME ASSERT_EQ(true, false == File::isWritable("/bin/ls"));
 
-  ASSERT_EQ(true, File::mkdir("/tmp/qq"));
-  ASSERT_EQ(true, File::mkdir("/tmp/foo/bar/"));
-  ASSERT_EQ(true, File::mkdir("/tmp/foo/bar/"));
+    ASSERT_EQ(true, File::mkdir("/tmp/qq"));
+    ASSERT_EQ(true, File::mkdir("/tmp/foo/bar/"));
+    ASSERT_EQ(true, File::mkdir("/tmp/foo/bar/"));
 
-  ASSERT_EQ(false, File::mkdir("/dev/null"));
+    ASSERT_EQ(false, File::mkdir("/dev/null"));
 
-  ASSERT_EQ(true, File::dirName("/tmp/foo/bar") == "/tmp/foo/");
-  ASSERT_EQ(true, File::dirName("/tmp/foo/") == "/tmp/foo/");
-  ASSERT_EQ(true, File::dirName("/tmp/foo") == "/tmp/");
-  ASSERT_EQ(true, File::dirName("/tmp/") == "/tmp/");
-  ASSERT_EQ(true, File::dirName("/tmp") == "/");
+    ASSERT_EQ(true, File::dirName("/tmp/foo/bar") == "/tmp/foo/");
+    ASSERT_EQ(true, File::dirName("/tmp/foo/") == "/tmp/foo/");
+    ASSERT_EQ(true, File::dirName("/tmp/foo") == "/tmp/");
+    ASSERT_EQ(true, File::dirName("/tmp/") == "/tmp/");
+    ASSERT_EQ(true, File::dirName("/tmp") == "/");
 
-  ASSERT_EQ(true, File::dirName("tmp/foo") == "tmp/");
-  ASSERT_EQ(true, File::dirName("tmp/foo/") == "tmp/foo/");
-  ASSERT_EQ(true, File::dirName("tmp") == "");
+    ASSERT_EQ(true, File::dirName("tmp/foo") == "tmp/");
+    ASSERT_EQ(true, File::dirName("tmp/foo/") == "tmp/foo/");
+    ASSERT_EQ(true, File::dirName("tmp") == "");
 }

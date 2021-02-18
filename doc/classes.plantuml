@@ -1,0 +1,45 @@
+@startuml
+
+abstract ILogger
+note right: Wrapper on vsnprintf() to buffer
+
+abstract ILogger
+{
++ void log(const char* format, ...)
++ void log(std::ostream*, enum Severity, const char* format, ...)
++ template <class T> ILogger& operator<<(const T& data)
+- {abstract} void write(std::string const& message) = 0
+- {abstract} void write(const char *message) = 0
+- {abstract} void beginOfLine() = 0
+- char buffer[1024]
+}
+
+abstract IFileLogger
+note right: A ILogger for files
+
+abstract IFileLogger
+{
+- {abstract} bool open(std::string const& filename) = 0
+- {abstract} void close() = 0
+- {abstract} void header() = 0
+- {abstract} void footer() = 0
+}
+
+abstract Logger
+note right: Concrete IFileLogger implementation
+
+class Logger << Singleton >>
+{
+- void write(std::string const& message)
+- void write(const char *message)
+- void beginOfLine()
+- bool open(std::string const& filename)
+- void close()
+- void header()
+- void footer()
+}
+
+ILogger <|-- IFileLogger
+IFileLogger <|-- Logger
+
+@enduml

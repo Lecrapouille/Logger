@@ -23,22 +23,19 @@
 #include "MyLogger/File.hpp"
 
 //------------------------------------------------------------------------------
-Path::Path(std::string const& path)
+Path::Path(std::string const& path, char const delimiter)
+  : m_delimiter(delimiter)
 {
-    split(path);
+    add(path);
 }
 
 //------------------------------------------------------------------------------
 void Path::add(std::string const& path)
 {
+    LOGI("Path::add '%s'", path.c_str());
     if (!path.empty())
     {
-        LOGI("Path::add '%s'", path.c_str());
         split(path);
-    }
-    else
-    {
-        LOGI("Ignoring Path::add '%s'", path.c_str());
     }
 }
 
@@ -55,6 +52,7 @@ void Path::clear()
 {
     m_search_paths.clear();
     m_string_path.clear();
+    m_dirty = false;
 }
 
 //------------------------------------------------------------------------------
@@ -62,7 +60,7 @@ void Path::remove(std::string const& path)
 {
     LOGI("Path::remove '%s'", path.c_str());
     m_search_paths.remove(path);
-    update();
+    m_dirty = true;
 }
 
 //------------------------------------------------------------------------------
@@ -70,15 +68,6 @@ std::pair<std::string, bool> Path::find(std::string const& filename) const
 {
     if (File::exist(filename))
         return std::make_pair(filename, true);
-
-    if (!m_stack_path.empty())
-    {
-        std::string temporary_file;
-        temporary_file = top();
-        temporary_file += filename;
-        if (File::exist(temporary_file))
-            return std::make_pair(temporary_file, true);
-    }
 
     for (auto const& it: m_search_paths)
     {
@@ -105,27 +94,94 @@ std::string Path::expand(std::string const& filename) const
 }
 
 //------------------------------------------------------------------------------
-std::string const &Path::toString() const
+bool Path::open(std::string& filename, std::ifstream& ifs, std::ios_base::openmode mode) const
 {
+    ifs.open(filename.c_str(), mode);
+    if (ifs)
+        return true;
+
+    for (auto const& it: m_search_paths)
+    {
+        std::string file(it + filename);
+        ifs.open(file.c_str(), mode);
+        if (ifs)
+        {
+            filename = file;
+            return true;
+        }
+    }
+
+    // Not found
+    return false;
+}
+
+//------------------------------------------------------------------------------
+bool Path::open(std::string& filename, std::ofstream& ofs, std::ios_base::openmode mode) const
+{
+    ofs.open(filename.c_str(), mode);
+    if (ofs)
+        return true;
+
+    for (auto const& it: m_search_paths)
+    {
+        std::string file(it + filename);
+        ofs.open(file.c_str(), mode);
+        if (ofs)
+        {
+            filename = file;
+            return true;
+        }
+    }
+
+    // Not found
+    return false;
+}
+
+//------------------------------------------------------------------------------
+bool Path::open(std::string& filename, std::fstream& fs, std::ios_base::openmode mode) const
+{
+    fs.open(filename.c_str(), mode);
+    if (fs)
+        return true;
+
+    for (auto const& it: m_search_paths)
+    {
+        std::string file(it + filename);
+        fs.open(filename.c_str(), mode);
+        if (fs)
+        {
+            filename = file;
+            return true;
+        }
+    }
+
+    // Not found
+    return false;
+}
+
+//------------------------------------------------------------------------------
+std::string const& Path::toString()
+{
+    update();
     return m_string_path;
 }
 
 //------------------------------------------------------------------------------
 void Path::update()
 {
-    m_string_path.clear();
-    m_string_path += ".";
-    m_string_path += m_delimiter;
-    if (!m_stack_path.empty())
+    if (m_dirty)
     {
-        m_string_path += top();
+        m_string_path.clear();
+        m_string_path += ".";
         m_string_path += m_delimiter;
-    }
-    for (auto const& it: m_search_paths)
-    {
-        m_string_path += it;
-        m_string_path.pop_back(); // Remove the '/' char
-        m_string_path += m_delimiter;
+
+        for (auto const& it: m_search_paths)
+        {
+            m_string_path += it;
+            m_string_path.pop_back(); // Remove the '/' char
+            m_string_path += m_delimiter;
+        }
+        m_dirty = false;
     }
 }
 
@@ -145,5 +201,5 @@ void Path::split(std::string const& path)
         else
             m_search_paths.push_back(directory + "/");
     }
-    update();
+    m_dirty = true;
 }
